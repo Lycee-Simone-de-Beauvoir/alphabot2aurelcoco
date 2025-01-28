@@ -1,5 +1,7 @@
 #include <Wire.h>
 #include <Adafruit_NeoPixel.h>
+#include <SoftwareSerial.h>
+
 
 #define PWMA   6           //Left Motor Speed pin (ENA)
 #define AIN2   A0          //Motor-L forward (IN2).
@@ -8,6 +10,9 @@
 #define BIN1   A2          //Motor-R forward (IN3)
 #define BIN2   A3          //Motor-R backward (IN4)
 #define PIN 7
+#define rxPin 2
+#define txPin 3
+SoftwareSerial mySerial(rxPin, txPin);
 
 #define Addr  0x20
 
@@ -27,8 +32,10 @@ Adafruit_NeoPixel RGB = Adafruit_NeoPixel(4, PIN, NEO_GRB + NEO_KHZ800);
 
 void setup() {
   // put your setup code here, to run once:
-  Serial.begin(115200);
-  Serial.println("Joystick example!!");
+
+  Serial.begin(9600);
+  pinMode(rxPin, INPUT);
+  pinMode(txPin, OUTPUT);
 
 
   Wire.begin();
@@ -44,16 +51,30 @@ void setup() {
 }
 
 void loop() {
-  // put your main code here, to run repeatedly:
-  PCF8574Write(0x1F | PCF8574Read());
-  value = PCF8574Read() | 0xE0;
+
+int i = 0;
+char someChar[32] = {0};
+// when characters arrive over the serial port...
+if(Serial.available()) {
+ do{
+ someChar[i++] = Serial.read();
+ delay(3);
+ }while (Serial.available() > 0);
+ mySerial.println(someChar);
+ Serial.println(someChar);
+}
+while(mySerial.available())
+ Serial.print((char)mySerial.read());
+// when characters arrive over the serial port...
+  value = mySerial.read();
+  Serial.println(value);
   if(value != 0xFF)
   {
     switch(value)
     { 
       case 0xFE:
         forward();
-        Serial.println("up");
+        Serial.println("Forward");
         RGB.begin();
         RGB.setPixelColor(0, RGB.Color(0, 255, 0));
         RGB.setPixelColor(1, RGB.Color(0, 255, 0));
@@ -84,8 +105,6 @@ void loop() {
       case 0xEF:
         forward();
         Serial.println("center");break;
-      default :
-        Serial.println("unknow\n");
     }
     while(value != 0xFF)
     {
