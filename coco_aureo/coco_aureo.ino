@@ -22,7 +22,8 @@ byte value;
 int Speed = 255;
 Adafruit_NeoPixel RGB = Adafruit_NeoPixel(4, PIN, NEO_GRB + NEO_KHZ800);
 
-bool isMovingForward = false;
+bool Reculer = false;
+bool Avancer = false;
 
 void setup() {
   Serial.begin(9600);
@@ -61,15 +62,16 @@ void loop() {
     Serial.println(value);
 
     if (value != 0xFF) {
-      if (value == 'F') {
-        isMovingForward = true;
+      if (value == 'A') {
+        forward();
         RGB.setPixelColor(0, RGB.Color(0, 255, 0));
         RGB.show();
-        Serial.println("Moving Forward");
-      } 
+        Serial.println("Avance");
+      }
+      
       else if (value == 'S') {
         stop();
-        isMovingForward = false;
+        Avancer = false;
         RGB.setPixelColor(0, RGB.Color(255, 255, 255));
         RGB.show();
         Serial.println("Stopping");
@@ -82,9 +84,7 @@ void loop() {
     }
   }
 
-  if (isMovingForward) {
-    forward();
-  }
+
 }
 
 void forward() {
